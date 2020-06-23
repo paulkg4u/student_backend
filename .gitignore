@@ -1,1 +1,4 @@
 .vscode
+migrations
+rest_framework
+db.sqlite3
