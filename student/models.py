@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 class Student(models.Model):
@@ -8,7 +9,7 @@ class Student(models.Model):
     siblings = models.CharField(max_length = 512)
     current_class = models.IntegerField(default = 1)
     gpa = models.FloatField(default=3)
-
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
