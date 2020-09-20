@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'django.contrib.admin',
+    'djangosaml2idp',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -120,3 +121,48 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+import saml2
+from saml2.saml import NAMEID_FORMAT_EMAILADDRESS, NAMEID_FORMAT_UNSPECIFIED
+from saml2.sigver import get_xmlsec_binary
+
+LOGIN_URL = '/login/'
+BASE_URL = 'http://localhost:9000/idp'
+
+SAML_IDP_CONFIG = {
+    'debug' : DEBUG,
+    'xmlsec_binary': get_xmlsec_binary(['/opt/local/bin', '/usr/bin/xmlsec1']),
+    'entityid': '%s/metadata' % BASE_URL,
+    'description': 'Example IdP setup',
+
+    'service': {
+        'idp': {
+            'name': 'Django localhost IdP',
+            'endpoints': {
+                'single_sign_on_service': [
+                    ('http://localhost:8000/idp/sso/post/', saml2.BINDING_HTTP_POST),
+                    ('http://localhost:8000/idp/sso/redirect/', saml2.BINDING_HTTP_REDIRECT),
+                ],
+                "single_logout_service": [
+                    ("http://localhost:8000/idp/slo/post/", saml2.BINDING_HTTP_POST),
+                    ("http://localhost:8000/idp/slo/redirect/", saml2.BINDING_HTTP_REDIRECT)
+                ],
+            },
+            'name_id_format': [NAMEID_FORMAT_EMAILADDRESS, NAMEID_FORMAT_UNSPECIFIED],
+            'sign_response': True,
+            'sign_assertion': True,
+            'want_authn_requests_signed': True,
+        },
+    },
+
+    # Signing
+    'key_file': BASE_DIR + '/certificates/private.key',
+    'cert_file': BASE_DIR + '/certificates/public.cert',
+    # Encryption
+    'encryption_keypairs': [{
+        'key_file': BASE_DIR + '/certificates/private.key',
+        'cert_file': BASE_DIR + '/certificates/public.cert',
+    }],
+    'valid_for': 365 * 24,
+}
